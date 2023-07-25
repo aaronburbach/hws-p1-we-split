@@ -8,29 +8,48 @@
 import SwiftUI
 
 struct ContentView: View {
+    // Private Properties
     @State private var checkAmount = 0.0
     @State private var numberOfPeople = 2
     @State private var tipPercentage = 20
     @FocusState private var amountIsFocused: Bool
+    let currencyCode: FloatingPointFormatStyle<Double>.Currency = .currency(code: Locale.current.currency?.identifier ?? "USD")
     
-    let tipPercentages = [10, 15, 20, 25, 0]
+    // Computed Properties
+    var tipPercentages: [Int] {
+        var tips = [Int]()
+        
+        for i in 0..<101 {
+            if (i % 5 == 0) {
+                tips.append(i)
+            }
+        }
+        
+        return tips
+    }
     
     var totalPerPerson: Double {
         let peopleCount = Double(numberOfPeople + 2)
+        
+        let amountPerPerson = checkAmountPlusTip / peopleCount
+        
+        return amountPerPerson
+    }
+    
+    var checkAmountPlusTip: Double {
         let tipSelection = Double(tipPercentage)
         
         let tipValue = checkAmount / 100 * tipSelection
         let grandTotal = checkAmount + tipValue
-        let amountPerPerson = grandTotal / peopleCount
         
-        return amountPerPerson
+        return grandTotal
     }
     
     var body: some View {
         NavigationView {
             Form {
                 Section {
-                    TextField("Amount", value: $checkAmount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                    TextField("Amount", value: $checkAmount, format: currencyCode)
                         .keyboardType(.decimalPad)
                         .focused($amountIsFocused)
                     
@@ -48,13 +67,21 @@ struct ContentView: View {
                             Text($0, format: .percent)
                         }
                     }
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.navigationLink)
                 } header: {
                     Text("How much tip do you want to leave?")
                 }
                 
                 Section {
-                    Text(totalPerPerson, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                    Text(checkAmountPlusTip, format: currencyCode)
+                } header: {
+                    Text("Check Amount + Tip")
+                }
+                
+                Section {
+                    Text(totalPerPerson, format: currencyCode)
+                } header: {
+                    Text("Amount per person")
                 }
             }
             .navigationTitle("WeSplit")
